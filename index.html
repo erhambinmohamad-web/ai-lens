@@ -1,0 +1,1383 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI-Lens Tahap 1</title>
+<meta name="theme-color" content="#f4f5f7">
+<style>
+:root {
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --text: #1a1e24;
+  --muted: #5d6673;
+  --line: #e1e4e9;
+  --accent: #0b7480;
+  --accent-ink: #ffffff;
+  --accent-weak: #e2f2f3;
+  --warn: #b45309;
+  --warn-weak: #fdf3e4;
+  --danger: #b42318;
+  --ok: #15803d;
+  --bezel: #15181c;
+  --radius: 12px;
+  --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .08);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #111418;
+    --surface: #1a1e24;
+    --text: #e8ebef;
+    --muted: #9aa3ae;
+    --line: #2b313a;
+    --accent: #3fb6c1;
+    --accent-ink: #062126;
+    --accent-weak: #13353a;
+    --warn: #f0a44b;
+    --warn-weak: #3a2a14;
+    --danger: #f2786d;
+    --ok: #4ade80;
+    --bezel: #050607;
+    --shadow: none;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+.wrap { max-width: 560px; margin: 0 auto; padding: 0 16px; }
+
+/* Header */
+header { padding: 12px 0 8px; }
+.top { display: flex; align-items: center; gap: 10px; }
+.brand { font-weight: 700; font-size: 17px; letter-spacing: -.01em; }
+.brand small { font-weight: 500; color: var(--muted); font-size: 13px; margin-left: 4px; }
+.conn { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12.5px; color: var(--muted);
+  padding: 4px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #9aa3ae; flex: none; }
+.chip.on .dot { background: var(--ok); }
+.chip.connecting .dot { background: var(--warn); }
+
+/* Device */
+.device-area { position: sticky; top: 0; z-index: 5; background: var(--bg); padding-bottom: 8px; }
+.bezel {
+  background: var(--bezel); border-radius: 14px; padding: 12px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+}
+#lens {
+  display: block; width: 100%; aspect-ratio: 2 / 1; background: #000;
+  image-rendering: pixelated; image-rendering: crisp-edges; border-radius: 3px;
+}
+.dev-ctrl { display: grid; grid-template-columns: 1fr auto 1fr 44px; gap: 8px; align-items: center; margin-top: 8px; }
+.dev-ctrl .btn { white-space: nowrap; padding-left: 8px; padding-right: 8px; }
+.pageinfo { font-size: 13px; color: var(--muted); min-width: 76px; text-align: center; font-variant-numeric: tabular-nums; }
+
+/* Buttons */
+.btn {
+  appearance: none; border: 1px solid var(--line); background: var(--surface);
+  border-radius: 10px; padding: 9px 14px; min-height: 42px; cursor: pointer;
+  font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.ghost { background: transparent; }
+.btn.small { min-height: 34px; padding: 6px 10px; font-size: 13px; }
+.btn.danger { color: var(--danger); }
+.btn[disabled] { opacity: .5; cursor: default; }
+.btn.rec { background: var(--danger); color: #fff; border-color: var(--danger); }
+
+/* Cards & forms */
+main { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 14px; margin: 12px 0; box-shadow: var(--shadow);
+}
+.card h2 { font-size: 15px; margin: 0 0 10px; }
+.card h3 { font-size: 13px; margin: 14px 0 6px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.card h3:first-of-type { margin-top: 0; }
+.hint { font-size: 12.5px; color: var(--muted); margin: 6px 0 0; }
+textarea, input[type=text], input[type=password], input[type=url], input[type=number], select {
+  width: 100%; border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 10px 12px;
+}
+textarea { resize: vertical; min-height: 64px; }
+label.field { display: block; margin: 10px 0 0; font-size: 13px; font-weight: 600; }
+label.field > span { display: block; margin-bottom: 4px; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.row > .grow { flex: 1; }
+.ask-actions { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; margin-top: 8px; }
+.status { font-size: 13px; color: var(--muted); margin-top: 8px; min-height: 19px; font-variant-numeric: tabular-nums; }
+.status.err { color: var(--danger); }
+
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.seg button {
+  appearance: none; border: 0; background: var(--surface); padding: 8px 6px; min-height: 44px;
+  font-size: 13px; font-weight: 600; cursor: pointer; line-height: 1.2;
+}
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button small { display: block; font-weight: 500; color: var(--muted); font-size: 11.5px; }
+.seg button[aria-pressed=true] { background: var(--accent-weak); color: var(--accent); }
+.seg button[aria-pressed=true] small { color: var(--accent); }
+
+.slider { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; }
+.slider output { font-size: 13px; color: var(--muted); min-width: 92px; text-align: right; font-variant-numeric: tabular-nums; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+.check { display: flex; gap: 10px; align-items: center; padding: 8px 0; font-size: 14px; }
+.check input { width: 20px; height: 20px; accent-color: var(--accent); flex: none; }
+
+/* Rating */
+.stars { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.stars button { min-height: 44px; }
+.stars button[aria-pressed=true] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.tags button { border-radius: 999px; min-height: 32px; padding: 4px 12px; font-size: 13px; font-weight: 500; }
+.tags button[aria-pressed=true] { background: var(--accent-weak); color: var(--accent); border-color: var(--accent); }
+.scale-labels { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+
+details summary { cursor: pointer; font-size: 13px; color: var(--muted); }
+.answer { white-space: pre-wrap; font-size: 14px; margin-top: 8px; }
+
+/* Log */
+.table-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; font-variant-numeric: tabular-nums; }
+th { color: var(--muted); font-weight: 600; font-size: 12px; }
+td.num, th.num { text-align: right; }
+td.set { white-space: normal; }
+td.set small { display: block; color: var(--muted); font-size: 12px; }
+.entry { border-top: 1px solid var(--line); padding: 10px 0; }
+.entry:first-child { border-top: 0; padding-top: 0; }
+.entry .q { font-weight: 600; font-size: 14px; overflow-wrap: anywhere; }
+.entry .meta { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.pill { display: inline-block; font-size: 11.5px; padding: 1px 8px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); margin: 4px 4px 0 0; }
+.empty { color: var(--muted); font-size: 14px; }
+
+.banner { background: var(--warn-weak); color: var(--warn); border-radius: 10px; padding: 10px 12px; font-size: 13px; margin-top: 8px; }
+.devlog { font: 12px/1.4 ui-monospace, Menlo, Consolas, monospace; color: var(--muted); max-height: 120px; overflow: auto; white-space: pre-wrap; background: var(--bg); border-radius: 8px; padding: 8px; margin-top: 8px; }
+
+/* Tabs */
+nav.tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+  background: var(--surface); border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+nav.tabs .inner { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); }
+nav.tabs button {
+  appearance: none; border: 0; background: none; padding: 10px 4px 12px; min-height: 56px;
+  font-size: 12.5px; font-weight: 600; color: var(--muted); cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+nav.tabs button svg { width: 22px; height: 22px; }
+nav.tabs button[aria-selected=true] { color: var(--accent); }
+.tab[hidden] { display: none; }
+
+.toast {
+  position: fixed; left: 50%; bottom: calc(76px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+  background: #1a1e24; color: #fff; padding: 10px 14px; border-radius: 10px; font-size: 13.5px;
+  max-width: calc(100% - 32px); z-index: 20; opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<header class="wrap">
+  <div class="top">
+    <div class="brand">AI-Lens <small>Tahap 1</small></div>
+    <div class="conn">
+      <span class="chip" id="connChip"><span class="dot"></span><span id="connLabel">Simulator</span></span>
+      <button class="btn small primary" id="connBtn">Hubungkan</button>
+    </div>
+  </div>
+  <div class="banner" id="secureBanner" hidden>Halaman ini dibuka tanpa HTTPS. Bluetooth dan input suara hanya jalan lewat https:// (mis. GitHub Pages). Simulator tetap bisa dipakai.</div>
+</header>
+
+<div class="device-area">
+  <div class="wrap">
+    <div class="bezel">
+      <canvas id="lens" width="128" height="64" aria-label="Simulator layar OLED 128x64"></canvas>
+    </div>
+    <div class="dev-ctrl">
+      <button class="btn" id="prevBtn" aria-label="Sebelumnya">&#9664; Kembali</button>
+      <div class="pageinfo" id="pageInfo">–</div>
+      <button class="btn" id="nextBtn" aria-label="Berikutnya">Lanjut &#9654;</button>
+      <button class="btn ghost" id="clearBtn" aria-label="Bersihkan layar" title="Bersihkan layar">&#10005;</button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <!-- ========== TANYA ========== -->
+  <section class="tab" id="tab-ask">
+    <div class="card">
+      <h2>Tanya AI</h2>
+      <textarea id="q" rows="2" placeholder="Mis.: berapa slump beton K-300 untuk pelat?"></textarea>
+      <div class="ask-actions">
+        <button class="btn" id="micBtn" aria-label="Bicara">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+          <span id="micLabel">Bicara</span>
+        </button>
+        <button class="btn primary" id="askBtn">Kirim ke layar</button>
+        <button class="btn" id="stopBtn" disabled>Stop</button>
+      </div>
+      <div class="status" id="askStatus"></div>
+      <details id="answerBox" hidden>
+        <summary>Lihat jawaban lengkap di HP</summary>
+        <div class="answer" id="answerText"></div>
+      </details>
+    </div>
+
+    <div class="card" id="rateCard" hidden>
+      <h2>Seberapa nyaman dibaca?</h2>
+      <div class="stars" id="stars">
+        <button class="btn" data-v="1">1</button><button class="btn" data-v="2">2</button><button class="btn" data-v="3">3</button><button class="btn" data-v="4">4</button><button class="btn" data-v="5">5</button>
+      </div>
+      <div class="scale-labels"><span>Sulit</span><span>Sangat nyaman</span></div>
+      <div class="tags" id="tags">
+        <button class="btn" data-t="Terlalu padat">Terlalu padat</button>
+        <button class="btn" data-t="Pas">Pas</button>
+        <button class="btn" data-t="Terlalu sedikit">Terlalu sedikit</button>
+        <button class="btn" data-t="Terlalu cepat">Terlalu cepat</button>
+        <button class="btn" data-t="Terlalu lambat">Terlalu lambat</button>
+        <button class="btn" data-t="Muncul terlalu lama">Muncul terlalu lama</button>
+      </div>
+      <label class="field"><span>Catatan</span><input type="text" id="note" placeholder="Opsional"></label>
+      <p class="hint" id="rateHint">Nilai tersimpan otomatis di tab Log.</p>
+    </div>
+  </section>
+
+  <!-- ========== TAMPILAN ========== -->
+  <section class="tab" id="tab-view" hidden>
+    <div class="card">
+      <h3>Cara tampil</h3>
+      <div class="seg" id="segMode">
+        <button data-v="page">Halaman<small>per layar</small></button>
+        <button data-v="rsvp">Kata demi kata<small>RSVP</small></button>
+        <button data-v="ticker">Berjalan<small>ticker</small></button>
+      </div>
+
+      <h3>Ukuran huruf</h3>
+      <div class="seg" id="segFont">
+        <button data-v="0">Kecil<small>21 × 6</small></button>
+        <button data-v="1">Sedang<small>18 × 4</small></button>
+        <button data-v="2">Besar<small>12 × 3</small></button>
+      </div>
+      <p class="hint">Angka = huruf per baris × baris per layar.</p>
+
+      <h3>Kecepatan</h3>
+      <div class="slider"><input type="range" id="wpm" min="80" max="500" step="10"><output id="wpmOut"></output></div>
+      <p class="hint">Dipakai untuk mode kata demi kata, berjalan, dan pindah halaman otomatis.</p>
+      <label class="check"><input type="checkbox" id="auto"> Pindah halaman otomatis (mode Halaman)</label>
+      <label class="check"><input type="checkbox" id="bar"> Garis progres di bawah layar</label>
+
+      <h3>Kecerahan</h3>
+      <div class="slider"><input type="range" id="contrast" min="0" max="255" step="5"><output id="contrastOut"></output></div>
+
+      <h3>Orientasi</h3>
+      <select id="rot">
+        <option value="0">Normal</option>
+        <option value="2">Putar 180°</option>
+        <option value="m">Cermin kiri-kanan (dipantulkan kaca/prisma)</option>
+        <option value="mv">Cermin atas-bawah</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <h3>Kapan teks muncul</h3>
+      <div class="seg" id="segTiming">
+        <button data-v="stream">Langsung<small>per kata</small></button>
+        <button data-v="complete">Setelah selesai<small>sekaligus</small></button>
+        <button data-v="delay">Setelah jeda<small>selesai + jeda</small></button>
+      </div>
+      <div class="slider" id="delayRow" style="margin-top:10px"><input type="range" id="delay" min="0.5" max="5" step="0.5"><output id="delayOut"></output></div>
+      <label class="check"><input type="checkbox" id="waitInd"> Tampilkan “Berpikir...” saat AI memproses</label>
+
+      <h3>Panjang jawaban maksimal</h3>
+      <div class="slider"><input type="range" id="maxWords" min="10" max="150" step="5"><output id="maxWordsOut"></output></div>
+      <p class="hint">Dikirim sebagai instruksi ke AI. Mode demo juga dipotong ke batas ini.</p>
+    </div>
+
+    <div class="card">
+      <h2>Teks uji keterbacaan</h2>
+      <p class="hint" style="margin-top:0">Kirim teks baku ke layar, baca sampai habis, lalu beri nilai di tab Tanya. Ulangi untuk tiap ukuran huruf dan cara tampil.</p>
+      <div class="row" style="margin-top:10px">
+        <button class="btn grow" data-test="pendek">Pendek<br><small>±20 kata</small></button>
+        <button class="btn grow" data-test="sedang">Sedang<br><small>±50 kata</small></button>
+        <button class="btn grow" data-test="panjang">Panjang<br><small>±100 kata</small></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== LOG ========== -->
+  <section class="tab" id="tab-log" hidden>
+    <div class="card">
+      <h2>Ringkasan per setelan</h2>
+      <div class="table-wrap" id="summary"></div>
+      <p class="hint">Kecepatan baca = jumlah kata ÷ waktu dari teks tampil sampai halaman terakhir dilewati.</p>
+    </div>
+    <div class="card">
+      <div class="row" style="margin-bottom:10px">
+        <h2 class="grow" style="margin:0">Riwayat uji</h2>
+        <button class="btn small" id="csvBtn">Ekspor CSV</button>
+        <button class="btn small danger" id="clearLogBtn">Hapus</button>
+      </div>
+      <div id="entries"></div>
+    </div>
+  </section>
+
+  <!-- ========== PENGATURAN ========== -->
+  <section class="tab" id="tab-set" hidden>
+    <div class="card">
+      <h2>Sumber AI</h2>
+      <select id="provider">
+        <option value="demo">Demo (tanpa internet / API)</option>
+        <option value="anthropic">Claude (Anthropic API)</option>
+        <option value="openai">Kompatibel OpenAI (OpenAI, OpenRouter, llama.cpp, Ollama)</option>
+        <option value="webhook">Webhook (mis. n8n)</option>
+      </select>
+      <div id="provFields">
+        <label class="field" id="fBase"><span>Base URL</span><input type="url" id="baseUrl" placeholder="https://api.openai.com/v1"></label>
+        <label class="field" id="fHook"><span>URL webhook</span><input type="url" id="webhook" placeholder="https://n8n.domainanda.com/webhook/ai-lens"></label>
+        <label class="field" id="fKey"><span>API key</span><input type="password" id="apiKey" autocomplete="off" placeholder="Disimpan hanya di browser ini"></label>
+        <label class="field" id="fModel"><span>Model</span><input type="text" id="model" placeholder=""></label>
+      </div>
+      <p class="hint" id="provHint"></p>
+      <label class="check"><input type="checkbox" id="remember"> Ingat 3 tanya-jawab terakhir (untuk pertanyaan lanjutan)</label>
+    </div>
+
+    <div class="card">
+      <h2>Suara</h2>
+      <label class="field"><span>Bahasa</span>
+        <select id="lang"><option value="id-ID">Bahasa Indonesia</option><option value="en-US">English (US)</option></select>
+      </label>
+      <label class="check"><input type="checkbox" id="autoSend"> Langsung kirim setelah selesai bicara</label>
+      <p class="hint">Tahan tombol NEXT di perangkat untuk mulai bicara dari HP (beberapa HP tetap butuh sentuhan layar pertama kali).</p>
+    </div>
+
+    <div class="card">
+      <h2>Perangkat</h2>
+      <label class="field"><span>Ukuran paket Bluetooth (byte)</span><input type="number" id="chunk" min="20" max="500" step="10"></label>
+      <p class="hint">Turun otomatis ke 20 bila pengiriman gagal.</p>
+      <div class="devlog" id="devlog">Belum ada pesan dari perangkat.</div>
+    </div>
+  </section>
+</main>
+
+<nav class="tabs" aria-label="Menu">
+  <div class="inner" role="tablist">
+    <button role="tab" data-tab="ask" aria-selected="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>Tanya</button>
+    <button role="tab" data-tab="view" aria-selected="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Tampilan</button>
+    <button role="tab" data-tab="log" aria-selected="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Log</button>
+    <button role="tab" data-tab="set" aria-selected="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Pengaturan</button>
+  </div>
+</nav>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   AI-Lens Tahap 1 — aplikasi HP
+   - Simulator layar OLED 128x64 (tata letak identik dengan firmware)
+   - Kirim teks ke ESP32 lewat Web Bluetooth (Nordic UART Service)
+   - Tanya AI: Demo / Claude / kompatibel OpenAI / webhook
+   - Catat metrik uji keterbacaan, ekspor CSV
+   ===================================================================== */
+
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => Array.from(document.querySelectorAll(s));
+
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* abaikan */ } },
+};
+
+const DEFAULT_VIEW = {
+  mode: 'page', font: 1, wpm: 200, auto: false, bar: true, contrast: 200, rot: '0',
+  timing: 'stream', delay: 1.5, wait: true, maxWords: 40,
+};
+const DEFAULT_SET = {
+  provider: 'demo', apiKey: '', model: '', baseUrl: 'https://api.openai.com/v1', webhook: '',
+  remember: true, lang: 'id-ID', autoSend: true, chunk: 180,
+};
+let view = Object.assign({}, DEFAULT_VIEW, store.get('ailens.view', {}));
+let settings = Object.assign({}, DEFAULT_SET, store.get('ailens.settings', {}));
+let log = store.get('ailens.log', []);
+let history = [];
+
+const saveView = () => store.set('ailens.view', view);
+const saveSettings = () => store.set('ailens.settings', settings);
+const saveLog = () => store.set('ailens.log', log.slice(0, 500));
+
+/* ---------------------------------------------------------------------
+   Simulator layar — logika sama dengan firmware ai_lens_esp32.ino
+   --------------------------------------------------------------------- */
+const W = 128, H = 64, BAR_H = 3, SS = 4;   // SS = supersampling untuk gambar huruf
+const FONTS = [
+  { w: 6, h: 10, label: 'Kecil' },
+  { w: 7, h: 14, label: 'Sedang' },
+  { w: 10, h: 20, label: 'Besar' },
+];
+const MODE_LABEL = { page: 'Halaman', rsvp: 'Kata demi kata', ticker: 'Berjalan' };
+const TIMING_LABEL = { stream: 'Langsung', complete: 'Setelah selesai', delay: 'Setelah jeda' };
+const chars = (s) => Array.from(s);
+
+class Lens {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.hi = document.createElement('canvas');
+    this.hi.width = W * SS; this.hi.height = H * SS;
+    this.hctx = this.hi.getContext('2d', { willReadFrequently: true });
+    this.lo = document.createElement('canvas');
+    this.lo.width = W; this.lo.height = H;
+    this.lctx = this.lo.getContext('2d');
+    this.cfg = { mode: 'page', font: 1, wpm: 200, auto: false, bar: true, contrast: 200, rot: '0' };
+    this.text = ''; this.lines = []; this.words = []; this.tickText = '';
+    this.page = 0; this.waiting = false; this.endSent = false; this.pageShownAt = 0;
+    this.rsvpIdx = 0; this.rsvpPaused = false; this.rsvpNext = 0;
+    this.tickX = W; this.tickPaused = false; this.tickLast = 0;
+    this.idleLabel = 'Mode simulator';
+    this.onEvent = () => {};
+    this.dirty = true; this.lastFrame = 0;
+    this.layout();
+    requestAnimationFrame((t) => this.loop(t));
+  }
+  emit(e) { this.onEvent(e); }
+  cpl() { return Math.floor(W / FONTS[this.cfg.font].w); }
+  lpp() { return Math.floor((H - (this.cfg.bar ? BAR_H : 0)) / FONTS[this.cfg.font].h); }
+  pageCount() { return Math.max(1, Math.ceil(this.lines.length / this.lpp())); }
+
+  layout() {
+    this.lines = []; this.words = [];
+    const cpl = this.cpl();
+    for (const para of this.text.split('\n')) {
+      this.wrap(para, cpl);
+      if (this.lines.length >= 400) break;
+    }
+    while (this.lines.length && this.lines[this.lines.length - 1] === '') this.lines.pop();
+    this.tickText = this.text.replace(/\n/g, '   ');
+    this.dirty = true;
+  }
+  wrap(para, cpl) {
+    const push = (l) => { if (this.lines.length < 400) this.lines.push(l); };
+    let cur = []; let any = false;
+    for (const w of para.split(' ')) {
+      if (!w) continue;
+      any = true; this.words.push(w);
+      const wc = chars(w);
+      if (wc.length > cpl) {
+        if (cur.length) { push(cur.join('')); cur = []; }
+        let pos = 0;
+        while (wc.length - pos > cpl) { push(wc.slice(pos, pos + cpl).join('')); pos += cpl; }
+        cur = wc.slice(pos);
+      } else if (!cur.length) {
+        cur = wc.slice();
+      } else if (cur.length + 1 + wc.length <= cpl) {
+        cur = cur.concat([' '], wc);
+      } else {
+        push(cur.join('')); cur = wc.slice();
+      }
+    }
+    if (cur.length || !any) push(cur.join(''));
+  }
+
+  setText(t, append) {
+    const now = performance.now();
+    if (append) {
+      this.text += t; this.endSent = false;
+    } else {
+      this.text = t; this.page = 0; this.endSent = false;
+      this.rsvpIdx = 0; this.rsvpPaused = false; this.tickX = W; this.tickPaused = false;
+    }
+    this.waiting = false;
+    this.layout();
+    this.page = Math.min(this.page, this.pageCount() - 1);
+    if (!append) {
+      this.pageShownAt = now;
+      this.rsvpNext = now + 400 + (this.words.length ? this.rsvpDelay(this.words[0]) : 0);
+      this.tickLast = now;
+      this.emit(`PAGE ${this.page + 1}/${this.pageCount()}`);
+    }
+  }
+  clear() { this.text = ''; this.waiting = false; this.page = 0; this.endSent = false; this.layout(); }
+  wait() { this.waiting = true; this.dirty = true; }
+  setConfig(c) {
+    Object.assign(this.cfg, c);
+    this.layout();
+    this.page = Math.min(this.page, this.pageCount() - 1);
+    if (this.rsvpIdx >= this.words.length) this.rsvpIdx = Math.max(0, this.words.length - 1);
+    const now = performance.now();
+    this.pageShownAt = now; this.tickLast = now;
+  }
+  next() {
+    if (!this.text) return;
+    const now = performance.now();
+    if (this.cfg.mode === 'rsvp') {
+      this.rsvpPaused = !this.rsvpPaused;
+      if (!this.rsvpPaused) this.rsvpNext = now + 300;
+      this.emit('PAUSE ' + (this.rsvpPaused ? 1 : 0));
+    } else if (this.cfg.mode === 'ticker') {
+      this.tickPaused = !this.tickPaused; this.tickLast = now;
+      this.emit('PAUSE ' + (this.tickPaused ? 1 : 0));
+    } else if (this.page < this.pageCount() - 1) {
+      this.page++; this.pageShownAt = now;
+      this.emit(`PAGE ${this.page + 1}/${this.pageCount()}`);
+    } else if (!this.endSent) {
+      this.endSent = true; this.emit('END');
+    }
+    this.dirty = true;
+  }
+  prev() {
+    if (!this.text) return;
+    const now = performance.now();
+    if (this.cfg.mode === 'rsvp') {
+      this.rsvpIdx = this.rsvpIdx > 10 ? this.rsvpIdx - 10 : 0; this.rsvpNext = now + 500;
+    } else if (this.cfg.mode === 'ticker') {
+      this.tickX = W; this.tickLast = now;
+    } else if (this.page > 0) {
+      this.page--; this.pageShownAt = now;
+      this.emit(`PAGE ${this.page + 1}/${this.pageCount()}`);
+    }
+    this.dirty = true;
+  }
+  goto(p) {
+    if (p >= 0 && p < this.pageCount()) { this.page = p; this.pageShownAt = performance.now(); this.dirty = true; }
+  }
+  rsvpDelay(w) {
+    const base = 60000 / Math.max(60, this.cfg.wpm);
+    const last = w.slice(-1);
+    let f = 1;
+    if ('.!?:'.includes(last)) f = 2; else if (',;'.includes(last)) f = 1.4;
+    if (chars(w).length > 8) f += 0.3;
+    return base * f;
+  }
+  wordsOnPage() {
+    const lpp = this.lpp(); let n = 0;
+    for (let i = this.page * lpp; i < (this.page + 1) * lpp && i < this.lines.length; i++) {
+      const l = this.lines[i];
+      if (!l) continue;
+      n += 1 + (l.match(/ /g) || []).length;
+    }
+    return n;
+  }
+  update(now) {
+    if (!this.text || this.waiting) return;
+    const c = this.cfg;
+    if (c.mode === 'page' && c.auto) {
+      const dur = Math.max(1500, this.wordsOnPage() * 60000 / c.wpm);
+      if (now - this.pageShownAt >= dur) {
+        if (this.page < this.pageCount() - 1) {
+          this.page++; this.pageShownAt = now; this.dirty = true;
+          this.emit(`PAGE ${this.page + 1}/${this.pageCount()}`);
+        } else if (!this.endSent) { this.endSent = true; this.emit('END'); }
+      }
+    } else if (c.mode === 'rsvp' && !this.rsvpPaused && this.words.length && now >= this.rsvpNext) {
+      if (this.rsvpIdx < this.words.length - 1) {
+        this.rsvpIdx++; this.rsvpNext = now + this.rsvpDelay(this.words[this.rsvpIdx]); this.dirty = true;
+      } else if (!this.endSent) { this.endSent = true; this.emit('END'); }
+    } else if (c.mode === 'ticker' && !this.tickPaused) {
+      const w = FONTS[c.font].w;
+      const pxPerSec = c.wpm * 6 / 60 * w;
+      this.tickX -= pxPerSec * (now - this.tickLast) / 1000;
+      this.tickLast = now;
+      if (this.tickX < -chars(this.tickText).length * w) {
+        if (!this.endSent) { this.endSent = true; this.emit('END'); }
+        this.tickX = W;
+      }
+      this.dirty = true;
+    }
+  }
+
+  /* --- gambar --- */
+  str(fd, x, y, s) {
+    const o = this.hctx;
+    const px = Math.min(fd.h, fd.w / 0.6) * 0.98;
+    o.font = `${px * SS}px ui-monospace, "DejaVu Sans Mono", Menlo, Consolas, "Courier New", monospace`;
+    const cs = chars(s);
+    for (let i = 0; i < cs.length; i++) {
+      const cx = x + i * fd.w;
+      if (cx >= W) break;
+      if (cx + fd.w <= 0) continue;
+      o.fillText(cs[i], cx * SS, (y + (fd.h - px) / 2) * SS);
+    }
+  }
+  center(fd, y, s) { this.str(fd, Math.max(0, Math.floor((W - chars(s).length * fd.w) / 2)), y, s); }
+  box(x, y, w, h) { this.hctx.fillRect(x * SS, y * SS, w * SS, h * SS); }
+  progress(num, den) { if (this.cfg.bar && den > 1) this.box(0, H - 2, Math.floor(W * num / den), 2); }
+
+  draw() {
+    const o = this.hctx, c = this.cfg, f = FONTS[c.font];
+    o.fillStyle = '#000'; o.fillRect(0, 0, W * SS, H * SS);
+    o.fillStyle = '#fff'; o.textBaseline = 'top';
+    if (this.waiting) {
+      this.center(FONTS[1], 25, 'Berpikir' + '.'.repeat(Math.floor(performance.now() / 400) % 4));
+    } else if (!this.text) {
+      this.center(FONTS[1], 12, 'AI-Lens');
+      this.center(FONTS[0], 40, this.idleLabel);
+    } else if (c.mode === 'rsvp' && this.words.length) {
+      const idx = Math.min(this.rsvpIdx, this.words.length - 1);
+      const w = this.words[idx];
+      let fi = c.font;
+      while (fi > 0 && chars(w).length * FONTS[fi].w > W) fi--;
+      const rf = FONTS[fi];
+      const shown = chars(w).length * rf.w > W ? chars(w).slice(0, Math.floor(W / rf.w)).join('') : w;
+      this.center(rf, Math.floor((H - BAR_H - rf.h) / 2), shown);
+      if (this.rsvpPaused) this.str(FONTS[0], 0, 0, 'II');
+      this.progress(idx + 1, this.words.length);
+    } else if (c.mode === 'ticker') {
+      const y = Math.floor((H - f.h) / 2);
+      let start = 0, x = this.tickX;
+      if (x < 0) { start = Math.floor(-x / f.w) + 1; x += start * f.w; }
+      const part = chars(this.tickText).slice(start, start + Math.floor(W / f.w) + 2).join('');
+      if (x < W) this.str(f, Math.floor(x), y, part);
+      if (this.tickPaused) this.str(FONTS[0], 0, 0, 'II');
+    } else {
+      const lpp = this.lpp(), st = this.page * lpp;
+      for (let i = 0; i < lpp && st + i < this.lines.length; i++) this.str(f, 0, i * f.h, this.lines[st + i]);
+      this.progress(this.page + 1, this.pageCount());
+    }
+
+    // turunkan ke 128x64 monokrom (seperti OLED asli)
+    const src = o.getImageData(0, 0, W * SS, H * SS).data;
+    const out = this.lctx.createImageData(W, H);
+    const d = out.data;
+    for (let y = 0; y < H; y++) {
+      for (let x = 0; x < W; x++) {
+        let sum = 0;
+        for (let yy = 0; yy < SS; yy++) {
+          const row = ((y * SS + yy) * W * SS + x * SS) * 4;
+          for (let xx = 0; xx < SS; xx++) sum += src[row + xx * 4];
+        }
+        const on = sum / (SS * SS) > 70;
+        const i = (y * W + x) * 4;
+        d[i] = on ? 222 : 0; d[i + 1] = on ? 244 : 0; d[i + 2] = on ? 255 : 0; d[i + 3] = 255;
+      }
+    }
+    this.lctx.putImageData(out, 0, 0);
+
+    const v = this.ctx;
+    v.setTransform(1, 0, 0, 1, 0, 0);
+    v.clearRect(0, 0, W, H);
+    if (c.rot === '2') v.setTransform(-1, 0, 0, -1, W, H);
+    else if (c.rot === 'm') v.setTransform(-1, 0, 0, 1, W, 0);
+    else if (c.rot === 'mv') v.setTransform(1, 0, 0, -1, 0, H);
+    v.drawImage(this.lo, 0, 0);
+    v.setTransform(1, 0, 0, 1, 0, 0);
+    this.canvas.style.filter = `brightness(${(0.35 + 0.65 * c.contrast / 255).toFixed(2)})`;
+  }
+  loop(now) {
+    this.update(now);
+    const animating = this.waiting || (this.cfg.mode === 'ticker' && this.text && !this.tickPaused);
+    if (this.dirty || (animating && now - this.lastFrame > 33)) {
+      this.draw(); this.dirty = false; this.lastFrame = now;
+    }
+    requestAnimationFrame((t) => this.loop(t));
+  }
+}
+
+const lens = new Lens($('#lens'));
+
+/* ---------------------------------------------------------------------
+   Bluetooth (Nordic UART Service)
+   --------------------------------------------------------------------- */
+const NUS = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+const NUS_RX = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
+const NUS_TX = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+const ble = { device: null, rx: null, connected: false, queue: Promise.resolve(), info: '' };
+
+function setConn(state) {
+  const chip = $('#connChip');
+  chip.classList.toggle('on', state === 'on');
+  chip.classList.toggle('connecting', state === 'connecting');
+  $('#connLabel').textContent = state === 'on' ? (ble.device?.name || 'AI-Lens') : state === 'connecting' ? 'Menghubungkan…' : 'Simulator';
+  $('#connBtn').textContent = state === 'on' ? 'Putuskan' : 'Hubungkan';
+  $('#connBtn').classList.toggle('primary', state !== 'on');
+  lens.idleLabel = state === 'on' ? 'HP terhubung' : 'Mode simulator';
+  lens.dirty = true;
+}
+
+async function bleConnect() {
+  if (!navigator.bluetooth) {
+    toast('Browser ini belum mendukung Web Bluetooth. Pakai Chrome di Android/PC, atau Bluefy di iPhone.');
+    return;
+  }
+  try {
+    const dev = await navigator.bluetooth.requestDevice({ filters: [{ namePrefix: 'AI-Lens' }], optionalServices: [NUS] });
+    ble.device = dev;
+    dev.addEventListener('gattserverdisconnected', onBleDisconnect);
+    setConn('connecting');
+    const server = await dev.gatt.connect();
+    const svc = await server.getPrimaryService(NUS);
+    ble.rx = await svc.getCharacteristic(NUS_RX);
+    const tx = await svc.getCharacteristic(NUS_TX);
+    await tx.startNotifications();
+    tx.addEventListener('characteristicvaluechanged', (e) => {
+      const s = new TextDecoder().decode(e.target.value).trim();
+      if (s) onLensEvent(s, 'device');
+    });
+    ble.connected = true;
+    setConn('on');
+    toast('Terhubung ke ' + dev.name);
+    bleSend('PING');
+    bleSend(cfgLine());
+    if (lens.text) bleSend('MSG ' + encodeText(lens.text));
+  } catch (err) {
+    if (err && err.name !== 'NotFoundError') toast('Gagal terhubung: ' + err.message);
+    setConn(ble.connected ? 'on' : 'off');
+  }
+}
+function bleDisconnect() { if (ble.device && ble.device.gatt.connected) ble.device.gatt.disconnect(); }
+function onBleDisconnect() { ble.connected = false; ble.rx = null; setConn('off'); toast('AI-Lens terputus'); }
+
+function bleSend(line) {
+  if (!ble.connected || !ble.rx) return Promise.resolve();
+  const bytes = new TextEncoder().encode(line + '\n');
+  ble.queue = ble.queue.then(async () => {
+    let size = Math.max(20, Math.min(500, Number(settings.chunk) || 180));
+    let i = 0;
+    while (i < bytes.length) {
+      if (!ble.rx) return;
+      const part = bytes.slice(i, i + size);
+      try {
+        if (ble.rx.writeValueWithResponse) await ble.rx.writeValueWithResponse(part);
+        else await ble.rx.writeValue(part);
+        i += part.length;
+      } catch (e) {
+        if (size > 20) { size = 20; settings.chunk = 20; saveSettings(); $('#chunk').value = 20; continue; }
+        throw e;
+      }
+    }
+  }).catch((e) => console.warn('Kirim BLE gagal', e));
+  return ble.queue;
+}
+
+const encodeText = (t) => t.replace(/\n/g, '\x1F');
+const cfgLine = () =>
+  `CFG mode=${view.mode};font=${view.font};wpm=${view.wpm};auto=${view.auto ? 1 : 0};bar=${view.bar ? 1 : 0};contrast=${view.contrast};rot=${view.rot}`;
+
+/* perintah ke layar: simulator + perangkat sekaligus */
+function showText(text, append) {
+  lens.setText(text, append);
+  bleSend((append ? 'ADD ' : 'MSG ') + encodeText(text));
+}
+function lensWait() { lens.wait(); bleSend('WAIT'); }
+function lensClear() { lens.clear(); bleSend('CLEAR'); }
+function lensNext() { lens.next(); bleSend('NEXT'); }
+function lensPrev() { lens.prev(); bleSend('PREV'); }
+
+let devLines = [];
+function onLensEvent(e, src) {
+  if (src === 'device') {
+    devLines.unshift(new Date().toLocaleTimeString('id-ID') + '  ' + e);
+    devLines = devLines.slice(0, 40);
+    $('#devlog').textContent = devLines.join('\n');
+  }
+  if (e.startsWith('PAGE ')) {
+    const [a] = e.slice(5).split('/').map(Number);
+    if (src === 'device') lens.goto(a - 1);
+    if (cur) cur.maxPage = Math.max(cur.maxPage || 0, a);
+  } else if (e === 'END') {
+    markEnd();
+  } else if (e === 'BTN ASK') {
+    startVoice();
+  } else if (e === 'BTN CLEAR') {
+    lens.clear();
+  } else if (e.startsWith('PONG')) {
+    ble.info = e;
+  }
+}
+// event simulator dipakai hanya saat tidak ada perangkat (agar tidak tercatat dua kali)
+lens.onEvent = (e) => { if (!ble.connected) onLensEvent(e, 'sim'); };
+
+/* ---------------------------------------------------------------------
+   Membersihkan teks jawaban agar cocok untuk OLED (huruf Latin-1)
+   --------------------------------------------------------------------- */
+const CHAR_MAP = {
+  '‘': "'", '’': "'", '“': '"', '”': '"', '–': '-', '—': '-',
+  '…': '...', '•': '-', '→': '->', '←': '<-', '≥': '>=', '≤': '<=',
+  '≈': '~', '−': '-', ' ': ' ', ' ': ' ', ' ': ' ',
+};
+function cleanText(s) {
+  let t = String(s)
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`([^`]*)`/g, '$1')
+    .replace(/\*\*|__/g, '')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/^[ \t]{0,3}#{1,6}[ \t]*/gm, '')
+    .replace(/^[ \t]*[-*•][ \t]+/gm, '- ')
+    .replace(/(^|\s)[*_](?=\S)/g, '$1')
+    .replace(/(\S)[*_](?=\s|$|[.,!?;:])/g, '$1');
+  t = chars(t).map((ch) => (CHAR_MAP[ch] !== undefined ? CHAR_MAP[ch] : ch)).join('');
+  t = t.replace(/\t/g, ' ');
+  t = chars(t).filter((ch) => {
+    const c = ch.codePointAt(0);
+    return c === 10 || (c >= 32 && c <= 126) || (c >= 161 && c <= 255);
+  }).join('');
+  return t.replace(/ +/g, ' ').replace(/ *\n */g, '\n').replace(/\n{2,}/g, '\n').trim();
+}
+const countWords = (t) => t.split(/\s+/).filter(Boolean).length;
+const sleep = (ms, signal) => new Promise((res, rej) => {
+  const t = setTimeout(res, ms);
+  if (signal) signal.addEventListener('abort', () => { clearTimeout(t); rej(new DOMException('Dibatalkan', 'AbortError')); }, { once: true });
+});
+
+/* ---------------------------------------------------------------------
+   AI
+   --------------------------------------------------------------------- */
+function systemPrompt() {
+  const cpl = Math.floor(W / FONTS[view.font].w);
+  return `Jawabanmu ditampilkan di layar kecil di depan mata pengguna (${cpl} huruf per baris). ` +
+    `Jawab dalam bahasa yang sama dengan pertanyaan (default bahasa Indonesia), MAKSIMAL ${view.maxWords} kata. ` +
+    `Langsung ke inti, kalimat pendek, angka penting tetap ditulis. ` +
+    `Jangan pakai markdown, emoji, tabel, judul, atau daftar bernomor.`;
+}
+
+async function readSSE(resp, onData) {
+  const reader = resp.body.getReader();
+  const dec = new TextDecoder();
+  let buf = '';
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let idx;
+    while ((idx = buf.indexOf('\n')) >= 0) {
+      const line = buf.slice(0, idx).replace(/\r$/, '');
+      buf = buf.slice(idx + 1);
+      if (line.startsWith('data:')) {
+        const data = line.slice(5).trim();
+        if (data) onData(data);
+      }
+    }
+  }
+}
+async function errText(r) {
+  let msg = '';
+  try {
+    const t = await r.text();
+    try { const j = JSON.parse(t); msg = (j.error && (j.error.message || j.error)) || j.message || t; } catch (e) { msg = t; }
+  } catch (e) { /* abaikan */ }
+  return `HTTP ${r.status}: ${String(msg).slice(0, 240)}`;
+}
+
+const DEMO = [
+  { k: /slump|beton|k-?\d{3}|cor\b|pengecoran/i,
+    a: 'Untuk beton K-300 pada pelat dan balok, slump umumnya 10 ± 2 cm. Uji slump setiap truk mixer datang, catat jam tiba, dan tolak beton bila slump di luar toleransi atau umur campuran lewat 2 jam.' },
+  { k: /besi|tulangan|d\d{2}/i,
+    a: 'Berat besi beton per meter: D10 0,617 kg, D13 1,042 kg, D16 1,578 kg, D19 2,226 kg. Kalikan panjang total dengan berat per meter, lalu tambah waste sekitar 5 persen.' },
+  { k: /k3|safety|apd|helm/i,
+    a: 'APD wajib di area proyek: helm, rompi, sepatu safety, dan sarung tangan. Untuk kerja di ketinggian di atas 1,8 meter tambahkan full body harness yang dikaitkan ke titik angkur.' },
+  { k: /cuaca|hujan/i,
+    a: 'Ini mode demo, jadi saya tidak membaca cuaca sungguhan. Isi sumber AI di tab Pengaturan untuk mendapat jawaban nyata.' },
+];
+async function demoAnswer(q, onDelta, signal) {
+  await sleep(700 + Math.random() * 500, signal);
+  const hit = DEMO.find((d) => d.k.test(q));
+  let a = hit ? hit.a : `Ini jawaban demo untuk "${q.slice(0, 50)}". Teks ini meniru jawaban AI yang dikirim kata demi kata, supaya Anda bisa menguji ukuran huruf, kecepatan baca, dan kapan teks sebaiknya muncul di layar.`;
+  const ws = a.split(' ');
+  if (ws.length > view.maxWords) a = ws.slice(0, view.maxWords).join(' ');
+  for (const tok of a.split(/(\s+)/)) {
+    await sleep(35 + Math.random() * 45, signal);
+    onDelta(tok);
+  }
+}
+
+async function askAI(q, onDelta, signal) {
+  const sys = systemPrompt();
+  const msgs = (settings.remember ? history : []).concat([{ role: 'user', content: q }]);
+  const maxTokens = Math.round(view.maxWords * 3 + 60);
+  const p = settings.provider;
+
+  if (p === 'demo') return demoAnswer(q, onDelta, signal);
+
+  if (p === 'anthropic') {
+    if (!settings.apiKey) throw new Error('API key Claude belum diisi (tab Pengaturan).');
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST', signal,
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': settings.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({ model: settings.model || 'claude-haiku-5-5', max_tokens: maxTokens, system: sys, messages: msgs, stream: true }),
+    });
+    if (!r.ok) throw new Error(await errText(r));
+    await readSSE(r, (data) => {
+      let j; try { j = JSON.parse(data); } catch (e) { return; }
+      if (j.type === 'content_block_delta' && j.delta && j.delta.type === 'text_delta') onDelta(j.delta.text);
+      else if (j.type === 'error') throw new Error((j.error && j.error.message) || 'Error dari API');
+    });
+    return;
+  }
+
+  if (p === 'openai') {
+    const base = (settings.baseUrl || '').replace(/\/+$/, '');
+    if (!base) throw new Error('Base URL belum diisi (tab Pengaturan).');
+    const headers = { 'content-type': 'application/json' };
+    if (settings.apiKey) headers.authorization = 'Bearer ' + settings.apiKey;
+    const r = await fetch(base + '/chat/completions', {
+      method: 'POST', signal, headers,
+      body: JSON.stringify({ model: settings.model || 'default', messages: [{ role: 'system', content: sys }].concat(msgs), stream: true, max_tokens: maxTokens }),
+    });
+    if (!r.ok) throw new Error(await errText(r));
+    await readSSE(r, (data) => {
+      if (data === '[DONE]') return;
+      let j; try { j = JSON.parse(data); } catch (e) { return; }
+      const d = j.choices && j.choices[0] && j.choices[0].delta && j.choices[0].delta.content;
+      if (d) onDelta(d);
+    });
+    return;
+  }
+
+  if (p === 'webhook') {
+    if (!settings.webhook) throw new Error('URL webhook belum diisi (tab Pengaturan).');
+    const r = await fetch(settings.webhook, {
+      method: 'POST', signal, headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ question: q, system: sys, max_words: view.maxWords, history: settings.remember ? history : [] }),
+    });
+    if (!r.ok) throw new Error(await errText(r));
+    const ct = r.headers.get('content-type') || '';
+    let text;
+    if (ct.includes('json')) {
+      let j = await r.json();
+      if (Array.isArray(j)) j = j[0] || {};
+      text = j.answer ?? j.output ?? j.text ?? j.message ?? JSON.stringify(j);
+    } else {
+      text = await r.text();
+    }
+    onDelta(String(text));
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Alur tanya + pencatatan metrik
+   --------------------------------------------------------------------- */
+let cur = null;          // entri log yang sedang berjalan
+let abortCtl = null;
+
+function newEntry(question, source) {
+  const f = FONTS[view.font];
+  const e = {
+    id: Date.now(), time: new Date().toISOString(), source, question,
+    mode: view.mode, font: view.font, cpl: Math.floor(W / f.w), lpp: Math.floor((H - (view.bar ? BAR_H : 0)) / f.h),
+    timing: source === 'uji' ? '-' : view.timing, wait: source === 'uji' ? false : view.wait,
+    maxWords: view.maxWords, wpm: view.wpm, auto: view.auto,
+    provider: source === 'uji' ? '-' : settings.provider,
+    model: source === 'uji' || settings.provider === 'demo' ? '-' : (settings.model || (settings.provider === 'anthropic' ? 'claude-haiku-5-5' : '')),
+    answer: '', words: 0, chars: 0, pages: 0, maxPage: 0,
+    firstTokenMs: null, completeMs: null, shownMs: null, endMs: null, readSec: null, readWpm: null,
+    rating: null, tags: [], note: '',
+  };
+  e._t0 = performance.now();
+  log.unshift(e);
+  cur = e;
+  saveLog();
+  showRateCard(e);
+  return e;
+}
+function markShown(e) {
+  if (e && e.shownMs == null) e.shownMs = Math.round(performance.now() - e._t0);
+}
+function markEnd() {
+  const e = cur;
+  if (!e || e.endMs != null || e.shownMs == null || !e.answer) return;
+  e.endMs = Math.round(performance.now() - e._t0);
+  e.readSec = Math.max(0.1, (e.endMs - e.shownMs) / 1000);
+  e.readWpm = Math.round(e.words / (e.readSec / 60));
+  saveLog(); renderLog();
+  status(`Selesai dibaca dalam ${fmt(e.readSec)} s (${e.readWpm} kata/menit). Beri nilai di bawah.`);
+}
+
+function makeSink(e, signal) {
+  let raw = '', sent = '', started = false, timer = null, lastFlush = 0;
+  function flush(final) {
+    if (signal.aborted) return;
+    const c = cleanText(raw);
+    let portion = c;
+    if (!final) {
+      const k = Math.max(c.lastIndexOf(' '), c.lastIndexOf('\n'));
+      portion = k > 0 ? c.slice(0, k) : '';
+    }
+    if (!portion || portion === sent) return;
+    if (!started) { showText(portion, false); started = true; markShown(e); }
+    else if (portion.startsWith(sent)) showText(portion.slice(sent.length), true);
+    else showText(portion, false);       // pembersihan mengubah teks sebelumnya: kirim ulang utuh
+    sent = portion;
+  }
+  return {
+    delta(d) {
+      if (e.firstTokenMs == null) {
+        e.firstTokenMs = Math.round(performance.now() - e._t0);
+        status(`Token pertama ${fmt(e.firstTokenMs / 1000)} s…`);
+      }
+      raw += d;
+      $('#answerBox').hidden = false;
+      $('#answerText').textContent = raw;
+      if (view.timing === 'stream') {
+        const now = performance.now();
+        if (now - lastFlush > 150) { lastFlush = now; flush(false); }
+        else if (!timer) timer = setTimeout(() => { timer = null; lastFlush = performance.now(); flush(false); }, 160);
+      }
+    },
+    async finish() {
+      if (timer) { clearTimeout(timer); timer = null; }
+      e.completeMs = Math.round(performance.now() - e._t0);
+      const c = cleanText(raw);
+      if (!c) throw new Error('AI tidak mengirim jawaban.');
+      if (view.timing === 'delay') await sleep(view.delay * 1000, signal);
+      if (view.timing === 'stream') flush(true);
+      else { showText(c, false); markShown(e); }
+      e.answer = c; e.words = countWords(c); e.chars = chars(c).length; e.pages = lens.pageCount();
+      return c;
+    },
+  };
+}
+
+async function ask(q) {
+  q = (q || '').trim();
+  if (!q) { $('#q').focus(); return; }
+  if (abortCtl) abortCtl.abort();
+  abortCtl = new AbortController();
+  const signal = abortCtl.signal;
+  const e = newEntry(q, 'ai');
+  setBusy(true);
+  status('Bertanya ke AI…');
+  $('#answerText').textContent = '';
+  if (view.wait) lensWait();
+  const sink = makeSink(e, signal);
+  try {
+    await askAI(q, (d) => sink.delta(d), signal);
+    const answer = await sink.finish();
+    if (settings.remember) {
+      history.push({ role: 'user', content: q }, { role: 'assistant', content: answer });
+      history = history.slice(-6);
+    }
+    status(`Token pertama ${fmt((e.firstTokenMs || 0) / 1000)} s · selesai ${fmt(e.completeMs / 1000)} s · ${e.words} kata · ${e.pages} hal. Baca sampai habis lalu tekan Berikutnya.`);
+    $('#q').value = '';
+  } catch (err) {
+    if (err.name === 'AbortError') { status('Dibatalkan.'); }
+    else {
+      status('Error: ' + err.message, true);
+      showText('Error: ' + cleanText(err.message).slice(0, 160), false);
+      e.note = 'Error: ' + err.message;
+    }
+  } finally {
+    setBusy(false);
+    if (abortCtl && abortCtl.signal === signal) abortCtl = null;
+    saveLog(); renderLog();
+  }
+}
+
+const TEST_TEXT = {
+  pendek: 'Volume cor pelat lantai 2 adalah 18,4 m³. Siapkan 3 truk mixer K-300 dan satu concrete pump untuk besok pukul 07.00.',
+  sedang: 'Hasil rapat koordinasi pagi ini: bekisting kolom lantai 3 wajib selesai hari Jumat. Besi D16 tambahan dikirim Kamis siang, jadi siapkan area bongkar di sisi timur. MK minta laporan progres mingguan dikirim setiap Senin sebelum jam sembilan, lengkap dengan foto per area dan kurva S terbaru.',
+  panjang: 'Checklist K3 sebelum pengecoran: pastikan semua pekerja memakai helm, rompi, sepatu safety, dan sarung tangan. Periksa perancah dan bekisting, terutama sambungan dan penyangga. Pastikan jalur truk mixer bebas dan ada flagman di gerbang. Pompa beton harus berdiri di tanah rata dengan outrigger terpasang penuh. Siapkan vibrator cadangan, lampu kerja bila pengecoran sampai malam, dan terpal bila turun hujan. Catat jam kedatangan setiap truk, hasil uji slump, dan ambil sampel silinder sesuai jumlah yang disyaratkan. Setelah selesai, lakukan curing minimal tujuh hari dan pasang tanda dilarang menginjak area cor.',
+};
+function runTest(level) {
+  if (abortCtl) abortCtl.abort();
+  const text = cleanText(TEST_TEXT[level]);
+  const e = newEntry('[uji] teks ' + level, 'uji');
+  e.firstTokenMs = 0; e.completeMs = 0;
+  showText(text, false);
+  markShown(e);
+  e.answer = text; e.words = countWords(text); e.chars = chars(text).length; e.pages = lens.pageCount();
+  saveLog(); renderLog();
+  $('#answerBox').hidden = false;
+  $('#answerText').textContent = text;
+  status(`Teks uji ${level}: ${e.words} kata, ${e.pages} hal. Baca sampai habis, lalu nilai.`);
+  selectTab('ask');
+}
+
+/* ---------------------------------------------------------------------
+   Input suara
+   --------------------------------------------------------------------- */
+let recog = null;
+function setMic(on) {
+  $('#micBtn').classList.toggle('rec', on);
+  $('#micLabel').textContent = on ? 'Berhenti' : 'Bicara';
+}
+function startVoice() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { toast('Input suara tidak didukung browser ini.'); return; }
+  if (recog) { recog.stop(); return; }
+  const qEl = $('#q');
+  let finalText = '';
+  recog = new SR();
+  recog.lang = settings.lang;
+  recog.interimResults = true;
+  recog.continuous = false;
+  recog.onresult = (e) => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const r = e.results[i];
+      if (r.isFinal) finalText += r[0].transcript; else interim += r[0].transcript;
+    }
+    qEl.value = (finalText + interim).trim();
+  };
+  recog.onerror = (e) => { if (e.error !== 'aborted' && e.error !== 'no-speech') toast('Suara: ' + e.error); };
+  recog.onend = () => {
+    setMic(false);
+    recog = null;
+    if (settings.autoSend && finalText.trim()) ask(qEl.value);
+    else if (!finalText.trim() && lens.text === 'Mendengarkan...') lensClear();
+  };
+  try {
+    recog.start();
+    setMic(true);
+    showText('Mendengarkan...', false);
+  } catch (err) {
+    toast('Tidak bisa mulai merekam: ' + err.message);
+    recog = null; setMic(false);
+  }
+}
+
+/* ---------------------------------------------------------------------
+   UI: status, rating, log
+   --------------------------------------------------------------------- */
+const fmt = (n) => (n == null || isNaN(n) ? '–' : Number(n).toLocaleString('id-ID', { maximumFractionDigits: 1, minimumFractionDigits: 1 }));
+function status(msg, err) { const el = $('#askStatus'); el.textContent = msg; el.classList.toggle('err', !!err); }
+function setBusy(b) { $('#askBtn').disabled = b; $('#stopBtn').disabled = !b; }
+let toastTimer = null;
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+let rateTarget = null;
+function showRateCard(e) {
+  rateTarget = e;
+  $('#rateCard').hidden = false;
+  $$('#stars button').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.v) === e.rating)));
+  $$('#tags button').forEach((b) => b.setAttribute('aria-pressed', String(e.tags.includes(b.dataset.t))));
+  $('#note').value = e.note || '';
+  $('#rateHint').textContent = `Untuk: ${e.question.slice(0, 60)}`;
+}
+
+function summaryRows() {
+  const groups = new Map();
+  for (const e of log) {
+    const key = `${MODE_LABEL[e.mode]}|${FONTS[e.font].label} (${e.cpl}×${e.lpp})|${TIMING_LABEL[e.timing] || 'Teks uji'}`;
+    if (!groups.has(key)) groups.set(key, { key, n: 0, rs: [], ws: [] });
+    const g = groups.get(key);
+    g.n++;
+    if (e.rating) g.rs.push(e.rating);
+    if (e.readWpm) g.ws.push(e.readWpm);
+  }
+  const avg = (a) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : null);
+  return Array.from(groups.values())
+    .map((g) => ({ ...g, r: avg(g.rs), w: avg(g.ws) }))
+    .sort((a, b) => (b.r || 0) - (a.r || 0));
+}
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function renderLog() {
+  const rows = summaryRows();
+  $('#summary').innerHTML = rows.length
+    ? `<table><thead><tr><th>Setelan</th><th class="num">Uji</th><th class="num">Nilai</th><th class="num">Kata/mnt</th></tr></thead><tbody>${
+      rows.map((g) => { const [m, f, t] = g.key.split('|');
+        return `<tr><td class="set">${esc(m)} · ${esc(f)}<small>${esc(t)}</small></td><td class="num">${g.n}</td><td class="num">${g.r ? fmt(g.r) : '–'}</td><td class="num">${g.w ? Math.round(g.w) : '–'}</td></tr>`; }).join('')
+    }</tbody></table>`
+    : '<p class="empty">Belum ada data. Kirim pertanyaan atau teks uji dulu.</p>';
+
+  $('#entries').innerHTML = log.length
+    ? log.slice(0, 60).map((e) => {
+      const t = new Date(e.time);
+      const bits = [];
+      if (e.firstTokenMs != null && e.source !== 'uji') bits.push(`token pertama ${fmt(e.firstTokenMs / 1000)} s`);
+      if (e.completeMs != null && e.source !== 'uji') bits.push(`selesai ${fmt(e.completeMs / 1000)} s`);
+      if (e.readSec != null) bits.push(`baca ${fmt(e.readSec)} s (${e.readWpm} kata/mnt)`);
+      if (e.words) bits.push(`${e.words} kata · ${e.pages} hal`);
+      return `<div class="entry">
+        <div class="q">${esc(e.question)}</div>
+        <div class="meta">${t.toLocaleDateString('id-ID')} ${t.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}${bits.length ? ' · ' + esc(bits.join(' · ')) : ''}</div>
+        <div><span class="pill">${MODE_LABEL[e.mode]}</span><span class="pill">${FONTS[e.font].label} ${e.cpl}×${e.lpp}</span>${e.timing !== '-' ? `<span class="pill">${TIMING_LABEL[e.timing]}</span>` : ''}<span class="pill">${e.rating ? 'Nilai ' + e.rating : 'Belum dinilai'}</span>${e.tags.map((x) => `<span class="pill">${esc(x)}</span>`).join('')}</div>
+        ${e.note ? `<div class="meta">${esc(e.note)}</div>` : ''}
+      </div>`;
+    }).join('')
+    : '<p class="empty">Riwayat kosong.</p>';
+}
+
+function exportCsv() {
+  if (!log.length) { toast('Log masih kosong.'); return; }
+  const num = (v, d = 1) => (v == null || v === '' ? '' : Number(v).toFixed(d).replace('.', ','));
+  const cols = [
+    ['waktu', (e) => new Date(e.time).toLocaleString('id-ID')],
+    ['sumber', (e) => e.source], ['pertanyaan', (e) => e.question], ['jawaban', (e) => e.answer],
+    ['cara_tampil', (e) => MODE_LABEL[e.mode]], ['ukuran_huruf', (e) => FONTS[e.font].label],
+    ['huruf_per_baris', (e) => e.cpl], ['baris_per_layar', (e) => e.lpp],
+    ['munculnya_teks', (e) => TIMING_LABEL[e.timing] || '-'], ['indikator_berpikir', (e) => (e.wait ? 'ya' : 'tidak')],
+    ['maks_kata', (e) => e.maxWords], ['kecepatan_wpm', (e) => e.wpm], ['pindah_otomatis', (e) => (e.auto ? 'ya' : 'tidak')],
+    ['jumlah_kata', (e) => e.words], ['jumlah_karakter', (e) => e.chars], ['jumlah_halaman', (e) => e.pages],
+    ['token_pertama_s', (e) => num(e.firstTokenMs != null ? e.firstTokenMs / 1000 : null, 2)],
+    ['jawaban_selesai_s', (e) => num(e.completeMs != null ? e.completeMs / 1000 : null, 2)],
+    ['teks_tampil_s', (e) => num(e.shownMs != null ? e.shownMs / 1000 : null, 2)],
+    ['waktu_baca_s', (e) => num(e.readSec, 1)], ['kecepatan_baca_kpm', (e) => (e.readWpm == null ? '' : e.readWpm)],
+    ['nilai', (e) => e.rating || ''], ['tanda', (e) => e.tags.join(', ')], ['catatan', (e) => e.note],
+    ['penyedia', (e) => e.provider], ['model', (e) => e.model],
+  ];
+  const cell = (v) => {
+    const s = String(v == null ? '' : v);
+    return /[";\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  };
+  const lines = [cols.map((c) => c[0]).join(';')].concat(log.map((e) => cols.map((c) => cell(c[1](e))).join(';')));
+  const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  const d = new Date();
+  a.href = URL.createObjectURL(blob);
+  a.download = `ai-lens-log-${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+/* ---------------------------------------------------------------------
+   Pengikatan kontrol
+   --------------------------------------------------------------------- */
+function selectTab(name) {
+  $$('nav.tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
+  $$('.tab').forEach((t) => { t.hidden = t.id !== 'tab-' + name; });
+  if (name === 'log') renderLog();
+}
+
+function bindSeg(id, key, cast) {
+  const el = $(id);
+  const paint = () => el.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(cast(b.dataset.v) === view[key])));
+  el.addEventListener('click', (ev) => {
+    const b = ev.target.closest('button'); if (!b) return;
+    view[key] = cast(b.dataset.v); paint(); applyView();
+  });
+  paint();
+}
+
+function applyView() {
+  saveView();
+  $('#wpmOut').textContent = `${view.wpm} kata/menit`;
+  $('#contrastOut').textContent = `${Math.round(view.contrast / 255 * 100)}%`;
+  $('#delayOut').textContent = `jeda ${fmt(view.delay)} s`;
+  $('#maxWordsOut').textContent = `${view.maxWords} kata`;
+  $('#delayRow').style.display = view.timing === 'delay' ? '' : 'none';
+  $('#auto').disabled = view.mode !== 'page';
+  lens.setConfig({ mode: view.mode, font: view.font, wpm: view.wpm, auto: view.auto, bar: view.bar, contrast: view.contrast, rot: view.rot });
+  clearTimeout(cfgTimer);
+  cfgTimer = setTimeout(() => bleSend(cfgLine()), 150);   // jangan banjiri Bluetooth saat slider digeser
+}
+let cfgTimer = null;
+
+function applyProviderUi() {
+  const p = settings.provider;
+  $('#fBase').hidden = p !== 'openai';
+  $('#fHook').hidden = p !== 'webhook';
+  $('#fKey').hidden = p === 'demo' || p === 'webhook';
+  $('#fModel').hidden = p === 'demo' || p === 'webhook';
+  $('#model').placeholder = p === 'anthropic' ? 'claude-haiku-5-5' : 'mis. nama model di server Anda';
+  $('#provHint').textContent = {
+    demo: 'Jawaban contoh tanpa internet. Cocok untuk menguji tampilan dan kontrol.',
+    anthropic: 'Kunci disimpan hanya di browser HP ini. Jangan pakai kunci perusahaan di HP bersama.',
+    openai: 'Untuk server sendiri (llama.cpp / Ollama di Z800), alamatnya harus https, mis. lewat Cloudflare Tunnel: https://ai.domainanda.com/v1',
+    webhook: 'Aplikasi mengirim JSON {question, system, max_words, history}. Balas dengan JSON {"answer": "..."} atau teks biasa.',
+  }[p];
+}
+
+function init() {
+  if (!window.isSecureContext) $('#secureBanner').hidden = false;
+
+  // tab
+  $$('nav.tabs button').forEach((b) => b.addEventListener('click', () => selectTab(b.dataset.tab)));
+
+  // perangkat
+  $('#connBtn').addEventListener('click', () => (ble.connected ? bleDisconnect() : bleConnect()));
+  $('#nextBtn').addEventListener('click', lensNext);
+  $('#prevBtn').addEventListener('click', lensPrev);
+  $('#clearBtn').addEventListener('click', lensClear);
+  setInterval(() => {
+    let s = '–';
+    if (lens.waiting) s = 'Berpikir';
+    else if (lens.text) {
+      if (lens.cfg.mode === 'page') s = `Hal ${lens.page + 1}/${lens.pageCount()}`;
+      else if (lens.cfg.mode === 'rsvp') s = `Kata ${Math.min(lens.rsvpIdx + 1, lens.words.length)}/${lens.words.length}${lens.rsvpPaused ? ' ⏸' : ''}`;
+      else s = lens.tickPaused ? 'Berjalan ⏸' : 'Berjalan';
+    }
+    $('#pageInfo').textContent = s;
+  }, 200);
+
+  // tanya
+  $('#askBtn').addEventListener('click', () => ask($('#q').value));
+  $('#stopBtn').addEventListener('click', () => { if (abortCtl) abortCtl.abort(); });
+  $('#micBtn').addEventListener('click', startVoice);
+  $('#q').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ask($('#q').value); } });
+
+  // rating
+  $('#stars').addEventListener('click', (ev) => {
+    const b = ev.target.closest('button'); if (!b || !rateTarget) return;
+    rateTarget.rating = Number(b.dataset.v);
+    $$('#stars button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    saveLog(); toast('Nilai ' + rateTarget.rating + ' tersimpan');
+  });
+  $('#tags').addEventListener('click', (ev) => {
+    const b = ev.target.closest('button'); if (!b || !rateTarget) return;
+    const t = b.dataset.t;
+    const i = rateTarget.tags.indexOf(t);
+    if (i >= 0) rateTarget.tags.splice(i, 1); else rateTarget.tags.push(t);
+    b.setAttribute('aria-pressed', String(i < 0));
+    saveLog();
+  });
+  $('#note').addEventListener('input', () => { if (rateTarget) { rateTarget.note = $('#note').value; saveLog(); } });
+
+  // tampilan
+  bindSeg('#segMode', 'mode', String);
+  bindSeg('#segFont', 'font', Number);
+  bindSeg('#segTiming', 'timing', String);
+  const bindRange = (id, key) => { const el = $(id); el.value = view[key]; el.addEventListener('input', () => { view[key] = Number(el.value); applyView(); }); };
+  bindRange('#wpm', 'wpm'); bindRange('#contrast', 'contrast'); bindRange('#delay', 'delay'); bindRange('#maxWords', 'maxWords');
+  const bindCheck = (id, key) => { const el = $(id); el.checked = !!view[key]; el.addEventListener('change', () => { view[key] = el.checked; applyView(); }); };
+  bindCheck('#auto', 'auto'); bindCheck('#bar', 'bar'); bindCheck('#waitInd', 'wait');
+  $('#rot').value = view.rot;
+  $('#rot').addEventListener('change', () => { view.rot = $('#rot').value; applyView(); });
+  $$('[data-test]').forEach((b) => b.addEventListener('click', () => runTest(b.dataset.test)));
+
+  // log
+  $('#csvBtn').addEventListener('click', exportCsv);
+  $('#clearLogBtn').addEventListener('click', () => {
+    if (!confirm('Hapus semua riwayat uji?')) return;
+    log = []; cur = null; rateTarget = null; saveLog(); renderLog(); $('#rateCard').hidden = true;
+  });
+
+  // pengaturan
+  const bindSet = (id, key, ev = 'input', getter) => {
+    const el = $(id);
+    if (el.type === 'checkbox') el.checked = !!settings[key]; else el.value = settings[key];
+    el.addEventListener(ev, () => {
+      settings[key] = getter ? getter(el) : (el.type === 'checkbox' ? el.checked : el.value.trim());
+      saveSettings();
+      if (key === 'provider') applyProviderUi();
+    });
+  };
+  bindSet('#provider', 'provider', 'change');
+  bindSet('#apiKey', 'apiKey'); bindSet('#model', 'model'); bindSet('#baseUrl', 'baseUrl'); bindSet('#webhook', 'webhook');
+  bindSet('#remember', 'remember', 'change'); bindSet('#autoSend', 'autoSend', 'change');
+  bindSet('#lang', 'lang', 'change');
+  bindSet('#chunk', 'chunk', 'change', (el) => Math.max(20, Math.min(500, Number(el.value) || 180)));
+  applyProviderUi();
+
+  applyView();
+  renderLog();
+}
+init();
+</script>
+</body>
+</html>
